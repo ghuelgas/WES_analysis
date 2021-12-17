@@ -1,0 +1,34 @@
+rule genomics_db_import:
+    input:
+        gvcfs=expand("{dir}WES/Analysis/calls/{sample}.g.vcf", sample=SAMPLES)
+    output:
+        db=directory("db"),
+    log:
+        "{dir}WES/Analysis/logs/gatk/genomicsdbimport.log"
+    params:
+        intervals="ref",
+        db_action="create", # optional
+        extra="",  # optional
+        java_opts="",  # optional
+    resources:
+        mem_mb=1024
+    wrapper:
+        "0.80.2/bio/gatk/genomicsdbimport"
+
+rule genotype_gvcfs:
+    input:
+        gvcf="gendb://db",  # combined gvcf over multiple samples
+    # N.B. gvcf or genomicsdb must be specified
+    # in the latter case, this is a GenomicsDB data store
+        ref="{dir}Reference/Homo_sapiens_assembly38.fasta"
+    output:
+        vcf="calls/all.vcf",
+    log:
+        "{dir}WES/Analysis/logs/gatk/genotypegvcfs.log"
+    params:
+        extra="",  # optional
+        java_opts="", # optional
+    resources:
+        mem_mb=1024
+    wrapper:
+        "0.80.2/bio/gatk/genotypegvcfs"
