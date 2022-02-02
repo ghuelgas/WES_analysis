@@ -1,14 +1,15 @@
 dir = "/home/UTHSCSA/huelgasmoral/Documents"
-SAMPLES= ["16B", "16T", "474B", "54B", "54T", "552B", '563B', "563T", "9B", "9T"]
+SAMPLES= ["105T", "203T", "235T", "266T", "367T", "369T", '444T', "472T"]
 
 rule all:
     input:
+        expand("/home/UTHSCSA/huelgasmoral/Documents/WES/Analysis/fixed-rg/{sample}.bam.bai",sample=SAMPLES),
         expand("/home/UTHSCSA/huelgasmoral/Documents/WES/Analysis/calls/{sample}.g.vcf", sample=SAMPLES)
 
 rule bwa_mem:
     input:
-        reads=["{dir}/WES/NGS-WES-BGI-Data-Nov2011/MZH11222_HUMkarX/{sample}/clean_data/{sample}.1.fq.gz",
-        "{dir}/WES/NGS-WES-BGI-Data-Nov2011/MZH11222_HUMkarX/{sample}/clean_data/{sample}.2.fq.gz"],
+        reads=["{dir}/WES/NGS-WES-RNAseq-UT_Austin_Nov2013/JA13476_WES/{sample}.1.fastq.gz",
+        "{dir}/WES/NGS-WES-RNAseq-UT_Austin_Nov2013/JA13476_WES/{sample}.2.fastq.gz"]
     output:
         "{dir}/WES/Analysis/mapped/{sample}.bam",
     log:
@@ -53,7 +54,7 @@ rule replace_rg:
     resources:
         mem_mb=4000
     wrapper:
-        "0.80.2/bio/picard/addorreplacereadgroups"
+        "master/bio/picard/addorreplacereadgroups"
 
 rule samtools_index:
     input:

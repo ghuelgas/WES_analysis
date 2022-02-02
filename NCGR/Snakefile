@@ -1,28 +1,28 @@
 dir = "/home/UTHSCSA/huelgasmoral/Documents"
-SAMPLES= ["1069T", "1076B", "1080T", "1081T", "1085B", "128T", '175T', "209T", "22634B", "370T", "390B", "554T", "55T", "614B", "84T", "85T"]
+SAMPLES= ["196T", "197T", "7-RG-SP22-PD07", "LEB-04"]
+
 
 rule all:
     input:
+        expand("/home/UTHSCSA/huelgasmoral/Documents/WES/Analysis/mapped/{sample}.sorted.bam.bai",sample=SAMPLES),
         expand("/home/UTHSCSA/huelgasmoral/Documents/WES/Analysis/calls/{sample}.g.vcf", sample=SAMPLES)
 
-rule bwa_mem:
+
+rule bowtie2:
     input:
-        reads=["{dir}/WES/result20130608/{sample}/{sample}.1.fq.gz",
-        "{dir}/WES/result20130608/{sample}/{sample}.2.fq.gz"]
+        sample=["{dir}/WES/NGS-NCGR-2nd-batch-alignment/NCGR_2nd_run_829/{sample}.1.fastq.gz",
+        "{dir}/WES/NGS-NCGR-2nd-batch-alignment/NCGR_2nd_run_829/{sample}.2.fastq.gz"]
     output:
-        "{dir}/WES/Analysis/mapped/{sample}.bam",
+        "{dir}/WES/Analysis/mapped/{sample}.bam"
     log:
-        "{dir}/WES/Analysis/logs/bwa_mem/{sample}.log",
+        "{dir}/WES/Analysis/logs/bowtie2/{sample}.log"
     params:
-        index="{dir}/Reference/Homo_sapiens_assembly38.fasta",
-        extra="",
-        sorting="none",  # Can be 'none', 'samtools' or 'picard'.
-        sort_order="queryname",  # Can be 'queryname' or 'coordinate'.
-        sort_extra="",  # Extra args for samtools/picard.
-        tmp_dir="/home/UTHSCSA/huelgasmoral/tmp",  # Path to temp dir. (optional)
-    threads: 8
+        index="{dir}/Reference/GRCh38_noalt_as/GRCh38_noalt_as",  # prefix of reference genome index (built with bowtie2-build)
+        extra=""  # optional parameters
+    threads: 8  # Use at least two threads
     wrapper:
-        "0.80.2/bio/bwa/mem"
+        "0.80.2/bio/bowtie2/align"
+
 
 rule samtools_sort:
     input:
@@ -30,7 +30,7 @@ rule samtools_sort:
     output:
         "{dir}WES/Analysis/mapped/{sample}.sorted.bam"
     params:
-        extra = "-m 6G",
+        extra = "-m 4G",
         tmp_dir = "/home/UTHSCSA/huelgasmoral/tmp"
     threads:  # Samtools takes additional threads through its option -@
         8     # This value - 1 will be sent to -@.
@@ -46,9 +46,9 @@ rule samtools_index:
        "{dir}WES/Analysis/logs/samtools_index/{sample}.log"
     params:
         "" # optional params string
+    priority: 50
     threads:  # Samtools takes additional threads through its option -@
         4     # This value - 1 will be sent to -@
-    priority: 50
     wrapper:
         "0.80.2/bio/samtools/index"
 
@@ -71,7 +71,7 @@ rule mark_duplicates:
     # and which can be used to request RAM during cluster job submission as `{resources.mem_mb}`:
     # https://snakemake.readthedocs.io/en/latest/executing/cluster.html#job-properties
     resources:
-        mem_mb=6000
+        mem_mb=4000
     wrapper:
         "0.80.2/bio/picard/markduplicates"
 
@@ -89,7 +89,7 @@ rule replace_rg:
     # and which can be used to request RAM during cluster job submission as `{resources.mem_mb}`:
     # https://snakemake.readthedocs.io/en/latest/executing/cluster.html#job-properties
     resources:
-        mem_mb=6000
+        mem_mb=4000
     wrapper:
         "0.80.2/bio/picard/addorreplacereadgroups"
 
@@ -116,7 +116,7 @@ rule gatk_baserecalibrator:
     # and which can be used to request RAM during cluster job submission as `{resources.mem_mb}`:
     # https://snakemake.readthedocs.io/en/latest/executing/cluster.html#job-properties
     resources:
-        mem_mb=6000
+        mem_mb=4000
     wrapper:
         "0.80.2/bio/gatk/baserecalibrator"
 
@@ -134,9 +134,10 @@ rule gatk_applybqsr:
         extra="",  # optional
         java_opts="", # optional
     resources:
-        mem_mb=6000
+        mem_mb=4000
     wrapper:
         "0.80.2/bio/gatk/applybqsr"
+
 
 rule haplotype_caller:
     input:
@@ -153,6 +154,6 @@ rule haplotype_caller:
         extra="--tmp-dir /home/UTHSCSA/huelgasmoral/tmp",  # optional
         java_opts="", # optional
     resources:
-        mem_mb=6000
+        mem_mb=7000
     wrapper:
         "0.80.2/bio/gatk/haplotypecaller"

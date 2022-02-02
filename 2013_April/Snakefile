@@ -46,6 +46,7 @@ rule samtools_index:
         "{dir}WES/Analysis/mapped/{sample}.sorted.bam.bai"
     log:
        "{dir}WES/Analysis/logs/samtools_index/{sample}.log"
+    priority: 50
     params:
         "" # optional params string
     threads:  # Samtools takes additional threads through its option -@
